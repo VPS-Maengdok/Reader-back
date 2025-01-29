@@ -1,0 +1,19 @@
+services:
+  reader-back:
+    image: maengdok-reader-back
+    container_name: maengdok-reader-back
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - .:/app
+      - /app/nodes_modules
+      - /app/.next
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
