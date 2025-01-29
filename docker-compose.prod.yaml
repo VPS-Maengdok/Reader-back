@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  reader-back:
+    image: maengdok-reader-back
+    container_name: maengdok-reader-back
+    build: 
+      context: .
+      dockerfile: docker/prod.Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - proxy
+      - reader-back
+      - postgresql
+    env_file:
+      - .env
+
+networks:
+  proxy:
+    external: true
+  reader-back:
+    external: true
+  postgresql:
+    external: true
