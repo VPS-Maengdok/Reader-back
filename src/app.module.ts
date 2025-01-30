@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UserModule } from './modules/user.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       synchronize: true, // ⚠️ Set false in production and use migrations
     }),
     ScheduleModule.forRoot(),
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
