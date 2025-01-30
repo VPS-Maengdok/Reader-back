@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './modules/user.module';
+import { AuthModule } from './modules/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './modules/user.module';
       synchronize: true, // ⚠️ Set false in production and use migrations
     }),
     ScheduleModule.forRoot(),
+    AuthModule,
     UserModule,
   ],
   controllers: [AppController],
