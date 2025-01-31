@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UserModule } from './modules/user.module';
 import { AuthModule } from './modules/auth.module';
+import { FeedModule } from './modules/feed.module';
+import { ArticleModule } from './modules/article.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { AuthModule } from './modules/auth.module';
     ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
+    FeedModule,
+    ArticleModule,
   ],
   controllers: [AppController],
   providers: [AppService],
