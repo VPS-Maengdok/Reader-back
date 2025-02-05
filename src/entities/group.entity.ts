@@ -17,15 +17,15 @@ export class Group {
   @Column({ unique: true })
   name: string;
 
-  @ManyToMany(() => Feed, (feed) => feed.id, {
+  @ManyToMany(() => Feed, (feed) => feed.groups, {
     cascade: true,
   })
   @JoinTable()
-  feed: Feed[];
+  feeds?: Feed[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({ nullable: true })
-  updatedAt: Date;
+  updatedAt?: Date;
 }

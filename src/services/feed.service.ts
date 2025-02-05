@@ -20,7 +20,10 @@ export class FeedService {
   }
 
   async findOne(id: number): Promise<FeedInterface> {
-    const feed = await this.feedRepository.findOne({ where: { id } });
+    const feed = await this.feedRepository.findOne({
+      where: { id },
+      relations: ['article', 'groups'],
+    });
 
     if (!feed) {
       throw new NotFoundException('Feed not found.');
@@ -37,6 +40,8 @@ export class FeedService {
     if (existingFeed) {
       throw new BadRequestException('Feed already exists.');
     }
+
+    await this.feedRepository.save(feed);
 
     return { message: 'Feed has been successfully created.' };
   }

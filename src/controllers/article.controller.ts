@@ -7,8 +7,8 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -43,14 +43,14 @@ export class ArticleController {
 
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Patch('mark-as-read/:id')
+  @Put('mark-as-read/:id')
   async markAsRead(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.markAsRead(id);
   }
 
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Patch('save/:id')
+  @Put('save/:id')
   async saveArticle(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.changeSaveStatus(id);
   }

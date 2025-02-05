@@ -3,11 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Article } from './article.entity';
+import { Group } from './group.entity';
 
 @Entity()
 export class Feed {
@@ -25,11 +27,14 @@ export class Feed {
 
   @ManyToOne(() => Article, (article) => article.id, { nullable: true })
   @JoinColumn()
-  article: Article[];
+  article?: Article[];
+
+  @ManyToMany(() => Group, (group) => group.feeds)
+  groups?: Group[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({ nullable: true })
-  updatedAt: Date;
+  updatedAt?: Date;
 }

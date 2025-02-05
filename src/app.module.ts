@@ -8,6 +8,7 @@ import { UserModule } from './modules/user.module';
 import { AuthModule } from './modules/auth.module';
 import { FeedModule } from './modules/feed.module';
 import { ArticleModule } from './modules/article.module';
+import { GroupModule } from './modules/group.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ArticleModule } from './modules/article.module';
     UserModule,
     FeedModule,
     ArticleModule,
+    GroupModule,
   ],
   controllers: [AppController],
   providers: [AppService],
