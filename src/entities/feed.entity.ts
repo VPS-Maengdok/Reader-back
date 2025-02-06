@@ -25,7 +25,10 @@ export class Feed {
   @Column({ unique: true })
   rssUrl: string;
 
-  @ManyToOne(() => Article, (article) => article.id, { nullable: true })
+  @ManyToOne(() => Article, (article) => article.id, {
+    nullable: true,
+    cascade: true,
+  })
   @JoinColumn()
   article?: Article[];
 

@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,6 +16,7 @@ export class ArticleService {
   constructor(
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
+    @Inject(forwardRef(() => FeedService))
     private readonly feedService: FeedService,
   ) {}
 
@@ -49,6 +52,10 @@ export class ArticleService {
   }
 
   async add(article: ArticleInterface): Promise<{ message: string }> {
+    if (!article.feed) {
+      throw new BadRequestException('Feed is required');
+    }
+
     const existingFeed = await this.feedService.findOne(article.feed.id);
     const existingArticle = await this.articleRepository.findOne({
       where: { feed: { id: existingFeed.id }, url: article.url },

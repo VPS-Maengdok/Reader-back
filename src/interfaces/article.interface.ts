@@ -1,9 +1,10 @@
 import { Feed } from 'src/entities/feed.entity';
 
 export interface Article {
-  id: number;
-  feed: Feed;
+  id?: number;
+  feed?: Feed;
   title: string;
+  description: string;
   content: string;
   url: string;
   publishedAt: Date;

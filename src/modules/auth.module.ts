@@ -4,8 +4,6 @@ import { AuthController } from 'src/controllers/auth.controller';
 import { AuthService } from 'src/services/auth.service';
 import { UserModule } from './user.module';
 
-console.log(process.env.JWT_SECRET);
-
 @Module({
   imports: [
     UserModule,
