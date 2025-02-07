@@ -27,8 +27,6 @@ export class RssExtractor {
       const parsedData: RssResponse = this.parserInstance.parse(response.data);
       const items = this.extractItems(parsedData);
 
-      console.log(items);
-
       return items.map((item) => ({
         title: item.title ? item.title : '',
         url: this.extractLink(item),
@@ -45,14 +43,23 @@ export class RssExtractor {
     }
   }
 
-  async createArticlesFromFeed(items: Article[]): Promise<{ message: string }> {
+  async createArticlesFromFeed(
+    items: Article[],
+  ): Promise<{ message: string; count: number }> {
+    let n: number = 0;
     await Promise.all(
       items.map(async (item) => {
-        await this.articleService.add(item);
+        const article = await this.articleService.add(item, true);
+
+        if (article.created !== undefined && article.created === false) {
+          n += 1;
+        }
       }),
     );
 
-    return { message: 'Articles created from Feed.' };
+    n = items.length - n;
+
+    return { message: 'Articles created from Feed.', count: n };
   }
 
   private extractDate(item: RssItem): Date {
@@ -114,7 +121,6 @@ export class RssExtractor {
       parsedData['rdf:RDF']?.item, // RDF-based feeds such as PHP.net
     ];
 
-    console.log(parsedData, possiblePaths);
     return possiblePaths.find((items) => Array.isArray(items)) ?? [];
   }
 }

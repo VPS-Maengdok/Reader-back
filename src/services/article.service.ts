@@ -51,9 +51,20 @@ export class ArticleService {
     return article;
   }
 
-  async add(article: ArticleInterface): Promise<{ message: string }> {
+  async add(
+    article: ArticleInterface,
+    isTask: boolean = false,
+  ): Promise<{ message: string; created?: boolean }> {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 1);
+    const articlePublishedMonth = article.publishedAt.getMonth();
+
     if (!article.feed) {
       throw new BadRequestException('Feed is required');
+    }
+
+    if (articlePublishedMonth >= date.getMonth()) {
+      return { message: 'Article is too old.', created: false };
     }
 
     const existingFeed = await this.feedService.findOne(article.feed.id);
@@ -61,8 +72,10 @@ export class ArticleService {
       where: { feed: { id: existingFeed.id }, url: article.url },
     });
 
-    if (existingArticle) {
+    if (existingArticle && !isTask) {
       throw new BadRequestException('Article already exists.');
+    } else if (existingArticle && isTask) {
+      return { message: 'Article already exists.', created: false };
     }
 
     await this.articleRepository.save(article);
@@ -89,7 +102,7 @@ export class ArticleService {
     };
   }
 
-  async removeOldArticles(): Promise<{ message: string }> {
+  async removeOldArticles(): Promise<{ message: string; count?: number }> {
     const limit: Date = new Date();
     limit.setMonth(limit.getMonth() - 1);
 
@@ -98,13 +111,14 @@ export class ArticleService {
     });
 
     if (articles.length == 0) {
-      return { message: 'No old article have been found.' };
+      return { message: 'No old article have been found.', count: 0 };
     }
 
     await this.articleRepository.remove(articles);
 
     return {
       message: `${articles.length} articles have been successfully removed.`,
+      count: articles.length,
     };
   }
 }
