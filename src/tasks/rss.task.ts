@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RssExtractor } from 'src/integrations/rssExtractor.service';
 import { Article } from 'src/interfaces/article.interface';
@@ -8,6 +8,7 @@ import { FeedService } from 'src/services/feed.service';
 @Injectable()
 export class RssTask {
   private articleCount: number;
+  private readonly logger = new Logger(RssTask.name);
 
   constructor(
     private readonly feedService: FeedService,
@@ -16,18 +17,18 @@ export class RssTask {
 
   @Cron(CronExpression.EVERY_HOUR)
   async fetchFeedsFromDatabase(): Promise<number> {
-    console.log('🕒 Running Cron Job: Fetching feeds from the database...');
+    this.logger.log('🕒 Running Cron Job: Fetching feeds from the database...');
     const feeds = this.feedService.findAll();
 
-    console.log(`${(await feeds).length} RSS Feeds have been found.`);
+    this.logger.log(`${(await feeds).length} RSS Feeds have been found.`);
     await Promise.all((await feeds).map((feed) => this.extractFeed(feed)));
 
-    console.log('✅ Cron job completed.');
+    this.logger.log('✅ Cron job completed.');
     return 1;
   }
 
   private async extractFeed(feed: Feed) {
-    console.log(`Extracting article from ${feed.websiteName} RSS`);
+    this.logger.log(`Extracting article from ${feed.websiteName} RSS`);
     const articles = await this.rssExtractor.fetch(feed);
 
     await this.createArticlesFromExtraction(articles, feed);
@@ -35,7 +36,7 @@ export class RssTask {
 
   private async createArticlesFromExtraction(articles: Article[], feed: Feed) {
     this.articleCount = 0;
-    console.log(
+    this.logger.log(
       `Creating new articles from the ${articles.length} extracted in ${feed.websiteName}.`,
     );
     const articlesCreated =
@@ -43,6 +44,6 @@ export class RssTask {
 
     this.articleCount = articlesCreated.count + this.articleCount;
 
-    console.log(`${articlesCreated.count} new articles have been created.`);
+    this.logger.log(`${articlesCreated.count} new articles have been created.`);
   }
 }
