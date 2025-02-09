@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios from 'axios';
 import { X2jOptions, XMLParser } from 'fast-xml-parser';
@@ -24,7 +23,9 @@ export class RssExtractor {
   async fetch(feed: Feed): Promise<Article[]> {
     try {
       const response = await axios.get(feed.rssUrl);
-      const parsedData: RssResponse = this.parserInstance.parse(response.data);
+      const parsedData: RssResponse = this.parserInstance.parse(
+        response.data as string,
+      );
       const items = this.extractItems(parsedData);
 
       return items.map((item) => ({
