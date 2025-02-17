@@ -46,6 +46,10 @@ export class GroupService {
 
     const existingGroup = await this.findOne(group);
 
+    if (!existingGroup.feeds) {
+      existingGroup.feeds = [];
+    }
+
     const duplicatedFeed = existingGroup.feeds?.findIndex(
       (feed) => feed.id === existingFeed.id,
     );

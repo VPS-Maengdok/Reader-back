@@ -7,6 +7,7 @@ export interface Article {
   description: string;
   content: string;
   url: string;
+  author?: string;
   publishedAt: Date;
   isSaved?: boolean;
   hasBeenRead?: boolean;

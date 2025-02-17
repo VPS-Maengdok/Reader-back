@@ -54,6 +54,10 @@ export class FeedService {
     await this.findOne(feed.id);
     await this.feedRepository.update(feed.id, feed);
 
+    const feedInstance = await this.findOne(feed.id);
+    const extractedDatas = this.rssExtractor.fetch(feedInstance);
+    await this.rssExtractor.createArticlesFromFeed(await extractedDatas);
+
     return { message: 'Feed has been successfully updated.' };
   }
 

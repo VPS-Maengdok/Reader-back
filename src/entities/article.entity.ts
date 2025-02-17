@@ -24,6 +24,9 @@ export class Article {
   @Column()
   url: string;
 
+  @Column({ nullable: true })
+  author: string;
+
   @Column({ type: 'text', nullable: true })
   description: string;
 

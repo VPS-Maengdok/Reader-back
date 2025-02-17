@@ -52,10 +52,4 @@ export class FeedController {
   async deleteFeed(@Param('id', ParseIntPipe) id: number) {
     return this.feedService.delete(id);
   }
-
-  @Get('pouet/test')
-  async testFeed() {
-    const data = await this.rssTask.fetchFeedsFromDatabase();
-    return data;
-  }
 }

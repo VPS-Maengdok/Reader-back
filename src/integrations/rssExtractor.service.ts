@@ -34,7 +34,7 @@ export class RssExtractor {
         publishedAt: this.extractDate(item),
         description: item.description ? item.description : '',
         content: this.extractContent(item),
-        creator: this.extractCreator(item),
+        author: this.extractCreator(item),
         feed: feed,
       }));
     } catch (error) {

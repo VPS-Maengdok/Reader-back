@@ -31,7 +31,7 @@ export class ArticleService {
       relations: ['feed'],
     });
 
-    if (!articles) {
+    if (!articles || articles.length === 0) {
       throw new NotFoundException('Articles not found for this feed.');
     }
 
@@ -55,15 +55,14 @@ export class ArticleService {
     article: ArticleInterface,
     isTask: boolean = false,
   ): Promise<{ message: string; created?: boolean }> {
-    const date = new Date();
-    date.setMonth(date.getMonth() - 1);
-    const articlePublishedMonth = article.publishedAt.getMonth();
+    const limitDate = new Date();
+    limitDate.setMonth(limitDate.getMonth() - 1);
 
     if (!article.feed) {
       throw new BadRequestException('Feed is required');
     }
 
-    if (articlePublishedMonth >= date.getMonth()) {
+    if (article.publishedAt < limitDate) {
       return { message: 'Article is too old.', created: false };
     }
 
