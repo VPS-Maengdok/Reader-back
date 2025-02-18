@@ -1,7 +1,7 @@
 name: Deploy Backend
 
 on:
-  push:
+  pull_request:
     branches:
       - main
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build and push backend image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}/maengdok_reader_back:latest -f docker/Dockerfile .
+          docker build -t ghcr.io/${{ github.repository }}/maengdok_reader_back:latest -f docker/prod.Dockerfile .
           docker push ghcr.io/${{ github.repository }}/maengdok_reader_back:latest
 
       - name: Deploy Backend on Server
