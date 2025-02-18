@@ -8,9 +8,11 @@ services:
       context: .
       dockerfile: docker/prod.Dockerfile
     ports:
-      - "3001:3000"
+      - "${PORT:3999}:${PORT:-3999}"
     environment:
       - NODE_ENV=production
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     restart: unless-stopped
     networks:
       - proxy
@@ -18,6 +20,12 @@ services:
       - postgresql
     env_file:
       - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.readerback.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.readerback.entrypoints=websecure"
+      - "traefik.http.routers.readerback.tls.certresolver=myresolver"
 
 networks:
   proxy:
