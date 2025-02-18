@@ -11,5 +11,5 @@
     },
     "collectCoverageFrom": ["src/**/*.{ts,js}"],
     "coverageDirectory": "./coverage",
-    "coveragePathIgnorePatterns": ["/node_modules/", "/dist/", "src/main.ts"]
+    "coveragePathIgnorePatterns": ["/node_modules/", "/dist/", "src/main.ts", "src/app.*.ts"]
 }
