@@ -4,6 +4,11 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UserModule } from './modules/user.module';
+import { AuthModule } from './modules/auth.module';
+import { FeedModule } from './modules/feed.module';
+import { ArticleModule } from './modules/article.module';
+import { GroupModule } from './modules/group.module';
 
 @Module({
   imports: [
@@ -19,6 +24,11 @@ import { ScheduleModule } from '@nestjs/schedule';
       synchronize: true, // ⚠️ Set false in production and use migrations
     }),
     ScheduleModule.forRoot(),
+    AuthModule,
+    UserModule,
+    FeedModule,
+    ArticleModule,
+    GroupModule,
   ],
   controllers: [AppController],
   providers: [AppService],
