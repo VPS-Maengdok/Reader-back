@@ -2,13 +2,13 @@ version: "3.8"
 
 services:
   reader-back:
-    image: maengdok-reader-back
-    container_name: maengdok-reader-back
+    image: reader-back
+    container_name: reader-back
     build: 
       context: .
       dockerfile: docker/prod.Dockerfile
     ports:
-      - "${PORT:3999}:${PORT:-3999}"
+      - "3999:${PORT:-3999}"
     environment:
       - NODE_ENV=production
       - ADMIN_USERNAME=${ADMIN_USERNAME}
@@ -20,12 +20,15 @@ services:
       - postgresql
     env_file:
       - .env
+    volumes:
+      - ./init.sql:/init.sql
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.readerback.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.readerback.entrypoints=websecure"
-      - "traefik.http.routers.readerback.tls.certresolver=myresolver"
+      - "traefik.http.routers.reader-back.rule=Host(`reader.back.maengdok.fr`)"
+      - "traefik.http.routers.reader-back.entrypoints=websecure"
+      - "traefik.http.routers.reader-back.tls.certresolver=myresolver"
+      - "traefik.http.services.reader-back.loadbalancer.server.port=3999"
 
 networks:
   proxy:
