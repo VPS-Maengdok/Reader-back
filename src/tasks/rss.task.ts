@@ -39,6 +39,7 @@ export class RssTask {
     this.logger.log(
       `Creating new articles from the ${articles.length} extracted in ${feed.websiteName}.`,
     );
+
     const articlesCreated =
       await this.rssExtractor.createArticlesFromFeed(articles);
 

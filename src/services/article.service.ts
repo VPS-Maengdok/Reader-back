@@ -56,14 +56,10 @@ export class ArticleService {
     isTask: boolean = false,
   ): Promise<{ message: string; created?: boolean }> {
     const limitDate = new Date();
-    limitDate.setMonth(limitDate.getMonth() - 1);
+    limitDate.setMonth(limitDate.getMonth() - 6);
 
     if (!article.feed) {
       throw new BadRequestException('Feed is required');
-    }
-
-    if (article.publishedAt < limitDate) {
-      return { message: 'Article is too old.', created: false };
     }
 
     const existingFeed = await this.feedService.findOne(article.feed.id);
@@ -75,6 +71,10 @@ export class ArticleService {
       throw new BadRequestException('Article already exists.');
     } else if (existingArticle && isTask) {
       return { message: 'Article already exists.', created: false };
+    }
+
+    if (article.publishedAt < limitDate) {
+      return { message: 'Article is too old.', created: false };
     }
 
     await this.articleRepository.save(article);
@@ -103,7 +103,7 @@ export class ArticleService {
 
   async removeOldArticles(): Promise<{ message: string; count?: number }> {
     const limit: Date = new Date();
-    limit.setMonth(limit.getMonth() - 1);
+    limit.setMonth(limit.getMonth() - 6);
 
     const articles = await this.articleRepository.find({
       where: { createdAt: LessThan(limit), isSaved: false },
