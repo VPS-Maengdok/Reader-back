@@ -39,7 +39,7 @@ export class RssExtractor {
       }));
     } catch (error) {
       throw new InternalServerErrorException(
-        `Failed to fetch RSS feed: ${error}`,
+        `Failed to fetch RSS feed for ${feed.websiteName}: ${error}`,
       );
     }
   }

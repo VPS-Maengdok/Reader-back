@@ -62,10 +62,6 @@ export class ArticleService {
       throw new BadRequestException('Feed is required');
     }
 
-    if (article.publishedAt < limitDate) {
-      return { message: 'Article is too old.', created: false };
-    }
-
     const existingFeed = await this.feedService.findOne(article.feed.id);
     const existingArticle = await this.articleRepository.findOne({
       where: { feed: { id: existingFeed.id }, url: article.url },

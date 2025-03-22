@@ -20,6 +20,7 @@ services:
     tty: true
     networks:
       - postgresql
+      - reader
     env_file:
       - .env
 
@@ -27,4 +28,6 @@ networks:
   postgresql:
     external:
       true
-  
+  reader:
+    external:
+      true
