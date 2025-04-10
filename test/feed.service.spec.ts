@@ -12,11 +12,14 @@ import {
   mockFeedRepository,
   mockRssExtractor,
 } from './mocks/feed.mock';
+import { ArticleService } from 'src/services/article.service';
+import { mockArticleService } from './mocks/article.mock';
 
 describe('FeedService', () => {
   let feedService: FeedService;
   let feedRepository: Repository<Feed>;
   let rssExtractor: RssExtractor;
+  let articleService: ArticleService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,18 +27,21 @@ describe('FeedService', () => {
         FeedService,
         { provide: getRepositoryToken(Feed), useValue: mockFeedRepository },
         { provide: RssExtractor, useValue: mockRssExtractor },
+        { provide: ArticleService, useValue: mockArticleService },
       ],
     }).compile();
 
     feedService = module.get<FeedService>(FeedService);
     feedRepository = module.get<Repository<Feed>>(getRepositoryToken(Feed));
     rssExtractor = module.get<RssExtractor>(RssExtractor);
+    articleService = module.get<ArticleService>(ArticleService);
   });
 
   it('should be defined', () => {
     expect(feedService).toBeDefined();
     expect(feedRepository).toBeDefined();
     expect(rssExtractor).toBeDefined();
+    expect(articleService).toBeDefined();
   });
 
   describe('findAll', () => {

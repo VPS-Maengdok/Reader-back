@@ -108,6 +108,13 @@ export const mockArticleRepository = {
     );
     return Promise.resolve({ affected: initialLength - mockArticles.length });
   }),
+
+  createQueryBuilder: jest.fn().mockResolvedValue({
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    getMany: jest.fn().mockResolvedValue(mockArticles),
+  }),
 };
 
 export const mockFeedService = {
@@ -148,4 +155,7 @@ export const mockArticleService = {
     message: '5 articles have been successfully removed.',
     count: 5,
   }),
+  countAllUnreadArticles: jest.fn().mockResolvedValue(2),
+  countAllUnreadArticlesFromFeed: jest.fn().mockResolvedValue(0),
+  findArticlesFromFilters: jest.fn().mockResolvedValue(mockArticles),
 };

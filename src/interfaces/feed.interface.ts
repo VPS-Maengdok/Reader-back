@@ -8,6 +8,8 @@ export interface Feed {
   rssUrl: string;
   article?: Article[];
   groups?: Group[];
+  isActivate?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  unreadCount?: number;
 }

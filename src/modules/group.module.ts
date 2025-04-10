@@ -5,9 +5,15 @@ import { Group } from 'src/entities/group.entity';
 import { GroupService } from 'src/services/group.service';
 import { FeedModule } from './feed.module';
 import { Feed } from 'src/entities/feed.entity';
+import { Article } from 'src/entities/article.entity';
+import { ArticleModule } from './article.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Group, Feed]), FeedModule],
+  imports: [
+    TypeOrmModule.forFeature([Group, Feed, Article]),
+    FeedModule,
+    ArticleModule,
+  ],
   providers: [GroupService],
   controllers: [GroupController],
   exports: [GroupService],

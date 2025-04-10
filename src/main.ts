@@ -16,6 +16,16 @@ async function bootstrap() {
     }),
   });
 
+  const allowedOrigins = process.env.ALLOW_ORIGINS
+    ? process.env.ALLOW_ORIGINS.split(',').map((origin) => origin.trim())
+    : [];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: 'GET,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+  });
+
   const dataSource: DataSource = app.get(DataSource);
 
   let isDbReady = false;

@@ -10,6 +10,7 @@ import { Article } from 'src/entities/article.entity';
 import { Article as ArticleInterface } from 'src/interfaces/article.interface';
 import { LessThan, Repository } from 'typeorm';
 import { FeedService } from './feed.service';
+import { Feed } from 'src/entities/feed.entity';
 
 @Injectable()
 export class ArticleService {
@@ -21,7 +22,20 @@ export class ArticleService {
   ) {}
 
   async findAll(): Promise<ArticleInterface[]> {
-    return await this.articleRepository.find({ relations: ['feed'] });
+    const articles = await this.articleRepository.find({
+      relations: ['feed'],
+      order: {
+        publishedAt: 'DESC',
+      },
+    });
+
+    articles.forEach((article) => {
+      if (article.content) {
+        delete (article as ArticleInterface).content;
+      }
+    });
+
+    return articles;
   }
 
   async findAllFromFeed(feed: number): Promise<ArticleInterface[]> {
@@ -36,6 +50,56 @@ export class ArticleService {
     }
 
     return articles;
+  }
+
+  async countAllUnreadArticles(): Promise<number> {
+    const unreadArticles = await this.articleRepository.find({
+      where: { hasBeenRead: false },
+    });
+
+    return unreadArticles.length;
+  }
+
+  async countAllUnreadArticlesFromFeed(feed: Feed): Promise<number> {
+    const unreadArticles = await this.articleRepository.find({
+      where: { feed: { id: feed.id }, hasBeenRead: false },
+    });
+
+    return unreadArticles.length;
+  }
+
+  async findArticlesFromFilters(filter: {
+    feeds?: number[];
+    groups?: number[];
+    saved?: boolean;
+    unread?: boolean;
+  }): Promise<ArticleInterface[]> {
+    const { feeds, groups, saved, unread } = filter;
+    const queryBuilder = this.articleRepository.createQueryBuilder('article');
+
+    queryBuilder
+      .leftJoinAndSelect('article.feed', 'feed')
+      .leftJoinAndSelect('feed.groups', 'group');
+
+    if (feeds && feeds.length > 0) {
+      queryBuilder.andWhere('feed.id IN (:...feeds)', { feeds });
+    }
+
+    if (groups && groups.length > 0) {
+      queryBuilder.andWhere('group.id IN (:...groups)', { groups });
+    }
+
+    if (saved) {
+      queryBuilder.andWhere('article.isSaved IS TRUE');
+    }
+
+    if (unread) {
+      queryBuilder.andWhere('article.hasBeenRead IS FALSE');
+    }
+
+    queryBuilder.orderBy('article.publishedAt', 'DESC');
+
+    return await queryBuilder.getMany();
   }
 
   async findOne(id: number): Promise<ArticleInterface> {

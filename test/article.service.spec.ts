@@ -11,6 +11,7 @@ import {
   mockArticleCreate,
   mockArticles,
 } from './mocks/article.mock';
+import { Feed } from 'src/entities/feed.entity';
 
 describe('ArticleService', () => {
   let articleService: ArticleService;
@@ -215,6 +216,118 @@ describe('ArticleService', () => {
       expect(result).toEqual({
         message: 'Article has been successfully removed from savings.',
       });
+    });
+  });
+
+  describe('countAllUnreadArticles', () => {
+    it('should return the count of unread articles', async () => {
+      const unreadArticles = [
+        { id: 1, hasBeenRead: false },
+        { id: 2, hasBeenRead: false },
+      ];
+      jest
+        .spyOn(mockArticleRepository, 'find')
+        .mockResolvedValue(unreadArticles);
+
+      const count = await articleService.countAllUnreadArticles();
+
+      expect(count).toBe(2);
+      expect(mockArticleRepository.find).toHaveBeenCalledWith({
+        where: { hasBeenRead: false },
+      });
+    });
+  });
+
+  describe('countAllUnreadArticlesFromFeed', () => {
+    it('should return the count of unread articles for a specific feed', async () => {
+      const feed = { id: 1 } as Feed;
+      const unreadArticles = [
+        { id: 1, hasBeenRead: false, feed: { id: 1 } },
+        { id: 3, hasBeenRead: false, feed: { id: 1 } },
+      ];
+      jest
+        .spyOn(mockArticleRepository, 'find')
+        .mockResolvedValue(unreadArticles);
+
+      const count = await articleService.countAllUnreadArticlesFromFeed(feed);
+
+      expect(count).toBe(2);
+      expect(mockArticleRepository.find).toHaveBeenCalledWith({
+        where: { feed: { id: feed.id }, hasBeenRead: false },
+      });
+    });
+  });
+
+  describe('findArticlesFromFilters', () => {
+    let fakeQueryBuilder: Partial<{
+      leftJoinAndSelect: () => any;
+      andWhere: () => any;
+      orderBy: () => any;
+      getMany: () => Promise<any>;
+    }>;
+
+    beforeEach(() => {
+      fakeQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(mockArticles),
+      };
+
+      jest
+        .spyOn(mockArticleRepository, 'createQueryBuilder')
+        .mockReturnValue(fakeQueryBuilder);
+    });
+
+    it('should build the query without filters and return articles', async () => {
+      const filter = {};
+
+      const result = await articleService.findArticlesFromFilters(filter);
+
+      expect(mockArticleRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'article',
+      );
+      expect(fakeQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'article.feed',
+        'feed',
+      );
+      expect(fakeQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'feed.groups',
+        'group',
+      );
+      expect(fakeQueryBuilder.orderBy).toHaveBeenCalledWith(
+        'article.publishedAt',
+        'DESC',
+      );
+      expect(result).toEqual(mockArticles);
+    });
+
+    it('should apply feeds and groups filters if provided', async () => {
+      const filter = { feeds: [1, 2], groups: [3] };
+
+      await articleService.findArticlesFromFilters(filter);
+
+      expect(fakeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'feed.id IN (:...feeds)',
+        { feeds: filter.feeds },
+      );
+      expect(fakeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'group.id IN (:...groups)',
+        { groups: filter.groups },
+      );
+    });
+
+    it('should apply saved and unread filters if provided', async () => {
+      const filter = { saved: true, unread: true };
+
+      await articleService.findArticlesFromFilters(filter);
+
+      expect(fakeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'article.isSaved IS TRUE',
+      );
+      expect(fakeQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'article.hasBeenRead IS FALSE',
+      );
     });
   });
 });

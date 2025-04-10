@@ -31,6 +31,14 @@ describe('ArticleController', () => {
     expect(articleService).toBeDefined();
   });
 
+  describe('GET /count', () => {
+    it('should return the number of unread articles', async () => {
+      const result = await articleController.getUnreadArticlesCount();
+      expect(result).toEqual({ count: 2 });
+      expect(mockArticleService.countAllUnreadArticles).toHaveBeenCalled();
+    });
+  });
+
   describe('GET /article', () => {
     it('should return all articles', async () => {
       const result = await articleController.getArticles();
@@ -60,6 +68,41 @@ describe('ArticleController', () => {
       await expect(articleController.getArticle(999)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('ArticleController - filterArticles', () => {
+    let articleController: ArticleController;
+    let articleService: ArticleService;
+
+    beforeEach(async () => {
+      const module: TestingModule = await Test.createTestingModule({
+        controllers: [ArticleController],
+        providers: [{ provide: ArticleService, useValue: mockArticleService }],
+      })
+        .overrideGuard(AuthGuard)
+        .useValue({ canActivate: () => true })
+        .compile();
+
+      articleController = module.get<ArticleController>(ArticleController);
+      articleService = module.get<ArticleService>(ArticleService);
+    });
+
+    it('should return filtered articles', async () => {
+      const filter = {
+        feeds: [1, 2],
+        groups: [3],
+        saved: true,
+        unread: false,
+      };
+
+      const result = await articleController.filterArticles(filter);
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(articleService.findArticlesFromFilters).toHaveBeenCalledWith(
+        filter,
+      );
+      expect(result).toEqual(mockArticles);
     });
   });
 

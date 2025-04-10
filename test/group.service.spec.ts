@@ -11,11 +11,14 @@ import {
   mockGroups,
   mockGroupCreate,
 } from './mocks/group.mock';
+import { mockArticleService } from './mocks/article.mock';
+import { ArticleService } from 'src/services/article.service';
 
 describe('GroupService', () => {
   let groupService: GroupService;
   let groupRepository: Repository<Group>;
   let feedService: FeedService;
+  let articleService: ArticleService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -23,18 +26,21 @@ describe('GroupService', () => {
         GroupService,
         { provide: getRepositoryToken(Group), useValue: mockGroupRepository },
         { provide: FeedService, useValue: mockFeedService },
+        { provide: ArticleService, useValue: mockArticleService },
       ],
     }).compile();
 
     groupService = module.get<GroupService>(GroupService);
     groupRepository = module.get<Repository<Group>>(getRepositoryToken(Group));
     feedService = module.get<FeedService>(FeedService);
+    articleService = module.get<ArticleService>(ArticleService);
   });
 
   it('should be defined', () => {
     expect(groupService).toBeDefined();
     expect(groupRepository).toBeDefined();
     expect(feedService).toBeDefined();
+    expect(articleService).toBeDefined();
   });
 
   describe('findAll', () => {
