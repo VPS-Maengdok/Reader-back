@@ -15,10 +15,15 @@ import {
 import { GroupService } from 'src/services/group.service';
 import { Group as GroupInterface } from 'src/interfaces/group.interface';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { FeedService } from 'src/services/feed.service';
+import { Feed } from 'src/interfaces/feed.interface';
 
 @Controller('group')
 export class GroupController {
-  constructor(private readonly groupService: GroupService) {}
+  constructor(
+    private readonly groupService: GroupService,
+    private readonly feedService: FeedService,
+  ) {}
 
   @Get()
   async getGroups() {
@@ -54,6 +59,12 @@ export class GroupController {
   @HttpCode(HttpStatus.OK)
   @Post('add')
   async addGroup(@Body() body: GroupInterface) {
+    if (body.feeds && Array.isArray(body.feeds)) {
+      const feedIds = body.feeds as unknown as number[];
+
+      body.feeds = await this.transformIdArrayToFeeds(feedIds);
+    }
+
     return this.groupService.add(body);
   }
 
@@ -61,6 +72,12 @@ export class GroupController {
   @HttpCode(HttpStatus.OK)
   @Patch('update')
   async updateGroup(@Body() body: GroupInterface) {
+    if (body.feeds && Array.isArray(body.feeds)) {
+      const feedIds = body.feeds as unknown as number[];
+
+      body.feeds = await this.transformIdArrayToFeeds(feedIds);
+    }
+
     return this.groupService.update(body);
   }
 
@@ -69,5 +86,23 @@ export class GroupController {
   @Delete('delete/:id')
   async deleteGroup(@Param('id', ParseIntPipe) id: number) {
     return this.groupService.delete(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Put('activate/:id')
+  async activateGroup(@Param('id', ParseIntPipe) id: number) {
+    return this.groupService.activate(id);
+  }
+
+  private async transformIdArrayToFeeds(bodyFeed: number[]): Promise<Feed[]> {
+    const feeds: Feed[] = await Promise.all(
+      bodyFeed.map(async (id: number) => {
+        const feed = await this.feedService.findOne(id);
+        return feed;
+      }),
+    );
+
+    return feeds.filter((feed) => feed != null);
   }
 }

@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Group as GroupInterface } from 'src/interfaces/group.interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FeedService } from './feed.service';
+import { ArticleService } from './article.service';
 
 @Injectable()
 export class GroupService {
@@ -15,10 +16,34 @@ export class GroupService {
     @InjectRepository(Group)
     private readonly groupRepository: Repository<Group>,
     private readonly feedService: FeedService,
+    private readonly articleService: ArticleService,
   ) {}
 
   async findAll(): Promise<GroupInterface[]> {
-    return await this.groupRepository.find({ relations: ['feeds'] });
+    const groups = await this.groupRepository.find({ relations: ['feeds'] });
+
+    await Promise.all(
+      groups.map(async (group) => {
+        let count = 0;
+
+        if (group.feeds) {
+          const feedCount = await Promise.all(
+            group.feeds.map(async (feed) => {
+              return this.articleService.countAllUnreadArticlesFromFeed(feed);
+            }),
+          );
+
+          count = feedCount.reduce(
+            (total, currentCount) => total + currentCount,
+            0,
+          );
+        }
+
+        (group as GroupInterface).unreadCount = count;
+      }),
+    );
+
+    return groups;
   }
 
   async findOne(id: number): Promise<GroupInterface> {
@@ -122,5 +147,16 @@ export class GroupService {
     await this.groupRepository.delete(id);
 
     return await this.findAll();
+  }
+
+  async activate(id: number): Promise<{ message: string }> {
+    const group = await this.findOne(id);
+    group.isActivate = !group.isActivate;
+
+    await this.groupRepository.save(group);
+
+    return {
+      message: `Group has been successfully ${!group.isActivate ? 'deactivated' : 'activated'}.`,
+    };
   }
 }

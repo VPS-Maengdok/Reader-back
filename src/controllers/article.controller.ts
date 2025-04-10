@@ -24,6 +24,11 @@ export class ArticleController {
     return this.articleService.findAll();
   }
 
+  @Get('count')
+  async getUnreadArticlesCount() {
+    return { count: await this.articleService.countAllUnreadArticles() };
+  }
+
   @Get('feed/:id')
   async getArticlesFromFeed(@Param('id', ParseIntPipe) id: number) {
     return this.articleService.findAllFromFeed(id);
@@ -39,6 +44,12 @@ export class ArticleController {
   @Post('add')
   async addArticle(@Body() body: ArticleInterface) {
     return this.articleService.add(body);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('filter-articles')
+  async filterArticles(@Body() body: { feeds?: number[]; groups?: number[] }) {
+    return this.articleService.findArticlesFromFilters(body);
   }
 
   @UseGuards(AuthGuard)

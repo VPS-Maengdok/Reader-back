@@ -35,6 +35,9 @@ export class Feed {
   @ManyToMany(() => Group, (group) => group.feeds)
   groups?: Group[];
 
+  @Column({ default: true })
+  isActivate?: boolean;
+
   @CreateDateColumn()
   createdAt?: Date;
 

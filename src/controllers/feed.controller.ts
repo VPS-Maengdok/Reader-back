@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -51,5 +52,12 @@ export class FeedController {
   @Delete('delete/:id')
   async deleteFeed(@Param('id', ParseIntPipe) id: number) {
     return this.feedService.delete(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Put('activate/:id')
+  async activateFeed(@Param('id', ParseIntPipe) id: number) {
+    return this.feedService.activate(id);
   }
 }

@@ -8,15 +8,23 @@ import {
   mockGroupCreate,
   mockGroupService,
 } from './mocks/group.mock';
+import { ArticleService } from 'src/services/article.service';
+import { FeedService } from 'src/services/feed.service';
+import { mockArticleService, mockFeedService } from './mocks/article.mock';
 
 describe('GroupController', () => {
   let groupController: GroupController;
   let groupService: GroupService;
+  let articleService: ArticleService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [GroupController],
-      providers: [{ provide: GroupService, useValue: mockGroupService }],
+      providers: [
+        { provide: GroupService, useValue: mockGroupService },
+        { provide: FeedService, useValue: mockFeedService },
+        { provide: ArticleService, useValue: mockArticleService },
+      ],
     })
       .overrideGuard(AuthGuard)
       .useValue({ canActivate: jest.fn().mockReturnValue(true) })
@@ -24,11 +32,13 @@ describe('GroupController', () => {
 
     groupController = module.get<GroupController>(GroupController);
     groupService = module.get<GroupService>(GroupService);
+    articleService = module.get<ArticleService>(ArticleService);
   });
 
   it('should be defined', () => {
     expect(groupController).toBeDefined();
     expect(groupService).toBeDefined();
+    expect(articleService).toBeDefined();
   });
 
   describe('GET /group', () => {

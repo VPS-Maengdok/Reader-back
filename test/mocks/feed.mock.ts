@@ -7,12 +7,14 @@ export const mockFeeds: Feed[] = [
     websiteName: 'testWebsite1',
     websiteUrl: 'testWebsiteUrl1',
     rssUrl: 'testRssUrl1',
+    isActivate: true,
   },
   {
     id: 2,
     websiteName: 'testWebsite2',
     websiteUrl: 'testWebsiteUrl2',
     rssUrl: 'testRssUrl2',
+    isActivate: true,
   },
 ];
 
@@ -21,6 +23,7 @@ export const mockFeedCreate: Feed = {
   websiteName: 'testAddWebsite',
   websiteUrl: 'testAddWebsiteUrl',
   rssUrl: 'https://feeds.feedburner.com/symfony/blog',
+  isActivate: true,
 };
 
 export const mockFeedUpdate: Feed = {
@@ -28,6 +31,7 @@ export const mockFeedUpdate: Feed = {
   websiteName: 'testUpdateWebsite',
   websiteUrl: 'testUpdateWebsiteUrl',
   rssUrl: 'https://feeds.feedburner.com/symfony/blog',
+  isActivate: true,
 };
 
 export const mockFeedRepository = {
@@ -78,6 +82,12 @@ export const mockFeedService = {
   delete: jest
     .fn()
     .mockResolvedValue({ message: 'Feed has been successfully deleted.' }),
+  deactivate: jest
+    .fn()
+    .mockResolvedValue({ message: 'Feed has been successfully deactivated.' }),
+  activate: jest
+    .fn()
+    .mockResolvedValue({ message: 'Feed has been successfully activated.' }),
 };
 
 export const mockRssTask = {

@@ -8,6 +8,7 @@ import { Feed } from 'src/entities/feed.entity';
 import { Repository } from 'typeorm';
 import { Feed as FeedInterface } from 'src/interfaces/feed.interface';
 import { RssExtractor } from 'src/integrations/rssExtractor.service';
+import { ArticleService } from './article.service';
 
 @Injectable()
 export class FeedService {
@@ -15,10 +16,20 @@ export class FeedService {
     @InjectRepository(Feed)
     private readonly feedRepository: Repository<Feed>,
     private readonly rssExtractor: RssExtractor,
+    private readonly articleService: ArticleService,
   ) {}
 
   async findAll(): Promise<FeedInterface[]> {
-    return await this.feedRepository.find();
+    const feeds = await this.feedRepository.find();
+
+    await Promise.all(
+      feeds.map(async (feed) => {
+        (feed as FeedInterface).unreadCount =
+          await this.articleService.countAllUnreadArticlesFromFeed(feed);
+      }),
+    );
+
+    return feeds;
   }
 
   async findOne(id: number): Promise<FeedInterface> {
@@ -66,5 +77,15 @@ export class FeedService {
     await this.feedRepository.delete(id);
 
     return { message: 'Feed has been successfully deleted.' };
+  }
+
+  async activate(id: number): Promise<{ message: string }> {
+    const feed = await this.findOne(id);
+    feed.isActivate = !feed.isActivate;
+    await this.feedRepository.save(feed);
+
+    return {
+      message: `Feed has been successfully ${feed.isActivate ? 'activated' : 'deactivated'}.`,
+    };
   }
 }

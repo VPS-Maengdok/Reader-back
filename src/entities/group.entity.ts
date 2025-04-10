@@ -23,6 +23,9 @@ export class Group {
   @JoinTable()
   feeds?: Feed[];
 
+  @Column({ default: true })
+  isActivate?: boolean;
+
   @CreateDateColumn()
   createdAt?: Date;
 
