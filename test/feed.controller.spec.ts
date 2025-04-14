@@ -54,6 +54,22 @@ describe('FeedController', () => {
     });
   });
 
+  describe('GET /feed?isActivate=true', () => {
+    it('should return an array of feeds', async () => {
+      const result = await feedController.getFeeds('true');
+      expect(result).toEqual(mockFeeds);
+      expect(mockFeedService.findAll).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('GET /feed?isActivate=false', () => {
+    it('should return an empty array of feeds', async () => {
+      const result = await feedController.getFeeds('false');
+      expect(result).toEqual([]);
+      expect(mockFeedService.findAll).toHaveBeenCalledWith(false);
+    });
+  });
+
   describe('GET /feed/:id', () => {
     it('should return a feed when found', async () => {
       const result = await feedController.getFeed(1);

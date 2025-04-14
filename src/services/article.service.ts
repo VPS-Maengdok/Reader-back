@@ -79,7 +79,8 @@ export class ArticleService {
 
     queryBuilder
       .leftJoinAndSelect('article.feed', 'feed')
-      .leftJoinAndSelect('feed.groups', 'group');
+      .leftJoinAndSelect('feed.groups', 'group')
+      .where('feed.isActivate IS TRUE');
 
     if (feeds && feeds.length > 0) {
       queryBuilder.andWhere('feed.id IN (:...feeds)', { feeds });

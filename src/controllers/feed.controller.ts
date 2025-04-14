@@ -10,21 +10,23 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { FeedService } from 'src/services/feed.service';
 import { Feed as FeedInterface } from 'src/interfaces/feed.interface';
-import { RssTask } from 'src/tasks/rss.task';
+
 @Controller('feed')
 export class FeedController {
-  constructor(
-    private readonly feedService: FeedService,
-    private readonly rssTask: RssTask,
-  ) {}
+  constructor(private readonly feedService: FeedService) {}
 
   @Get()
-  async getFeeds() {
+  async getFeeds(@Query('isActivate') isActivate?: string) {
+    if (isActivate === 'true' || isActivate === 'false') {
+      return this.feedService.findAll(isActivate === 'true');
+    }
+
     return this.feedService.findAll();
   }
 

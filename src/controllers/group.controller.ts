@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { GroupService } from 'src/services/group.service';
@@ -26,7 +27,11 @@ export class GroupController {
   ) {}
 
   @Get()
-  async getGroups() {
+  async getGroups(@Query('isActivate') isActivate?: string) {
+    if (isActivate === 'true' || isActivate === 'false') {
+      return this.groupService.findAll(isActivate === 'true');
+    }
+
     return this.groupService.findAll();
   }
 
@@ -37,7 +42,7 @@ export class GroupController {
 
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Put('add-feed/:group/:feed')
+  @Put('agroup/:grougroup')
   async addFeedToGroup(
     @Param('group', ParseIntPipe) group: number,
     @Param('feed', ParseIntPipe) feed: number,

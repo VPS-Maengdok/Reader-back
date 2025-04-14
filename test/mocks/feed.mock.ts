@@ -35,7 +35,20 @@ export const mockFeedUpdate: Feed = {
 };
 
 export const mockFeedRepository = {
-  find: jest.fn().mockResolvedValue(mockFeeds),
+  find: jest.fn().mockImplementation((isActivate?: boolean) => {
+    if (isActivate === undefined) {
+      return Promise.resolve(mockFeeds);
+    }
+    if (isActivate) {
+      return Promise.resolve(
+        mockFeeds.filter((group) => group.isActivate === true),
+      );
+    } else {
+      return Promise.resolve(
+        mockFeeds.filter((group) => group.isActivate === false),
+      );
+    }
+  }),
   findOne: jest
     .fn()
     .mockImplementation(
@@ -63,7 +76,21 @@ export const mockRssExtractor = {
 };
 
 export const mockFeedService = {
-  findAll: jest.fn().mockResolvedValue(mockFeeds),
+  findAll: jest.fn().mockImplementation((isActivate?: boolean) => {
+    if (isActivate === undefined) {
+      return Promise.resolve(mockFeeds);
+    }
+    if (isActivate) {
+      return Promise.resolve(
+        mockFeeds.filter((group) => group.isActivate === true),
+      );
+    } else {
+      return Promise.resolve(
+        mockFeeds.filter((group) => group.isActivate === false),
+      );
+    }
+  }),
+  findAllIsActivateFalse: jest.fn().mockResolvedValue([]),
   findOne: jest.fn().mockImplementation((id: number) => {
     const feed = mockFeeds.find((feed: Feed) => feed.id === id) as Feed;
 

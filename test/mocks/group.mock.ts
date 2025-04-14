@@ -14,6 +14,7 @@ export const mockGroups: Group[] = [
         rssUrl: 'https://feed.com/rss',
       },
     ],
+    isActivate: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -21,6 +22,7 @@ export const mockGroups: Group[] = [
     id: 2,
     name: 'Sports Updates',
     feeds: [],
+    isActivate: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -33,8 +35,20 @@ export const mockGroupCreate: Group = {
 };
 
 export const mockGroupRepository = {
-  find: jest.fn().mockResolvedValue(mockGroups),
-
+  find: jest.fn().mockImplementation((isActivate?: boolean) => {
+    if (isActivate === undefined) {
+      return Promise.resolve(mockGroups);
+    }
+    if (isActivate) {
+      return Promise.resolve(
+        mockGroups.filter((group) => group.isActivate === true),
+      );
+    } else {
+      return Promise.resolve(
+        mockGroups.filter((group) => group.isActivate === false),
+      );
+    }
+  }),
   findOne: jest
     .fn()
     .mockImplementation((options: { where: { id: number; name: string } }) => {
@@ -44,7 +58,6 @@ export const mockGroupRepository = {
       );
       return Promise.resolve(group || null);
     }),
-
   save: jest.fn().mockImplementation((group: DeepPartial<Group>) => {
     const newGroup = {
       ...group,
@@ -57,9 +70,7 @@ export const mockGroupRepository = {
     mockGroups.push(newGroup);
     return Promise.resolve(newGroup);
   }),
-
   update: jest.fn().mockResolvedValue({ affected: 1 }),
-
   delete: jest.fn().mockResolvedValue({ affected: 1, raw: [] }),
 };
 
@@ -76,7 +87,20 @@ export const mockFeedService = {
 };
 
 export const mockGroupService = {
-  findAll: jest.fn().mockResolvedValue(mockGroups),
+  findAll: jest.fn().mockImplementation((isActivate?: boolean) => {
+    if (isActivate === undefined) {
+      return Promise.resolve(mockGroups);
+    }
+    if (isActivate) {
+      return Promise.resolve(
+        mockGroups.filter((group) => group.isActivate === true),
+      );
+    } else {
+      return Promise.resolve(
+        mockGroups.filter((group) => group.isActivate === false),
+      );
+    }
+  }),
   findOne: jest.fn().mockImplementation((id: number) => {
     const group = mockGroups.find((group) => group.id === id);
     return group

@@ -19,8 +19,12 @@ export class GroupService {
     private readonly articleService: ArticleService,
   ) {}
 
-  async findAll(): Promise<GroupInterface[]> {
-    const groups = await this.groupRepository.find({ relations: ['feeds'] });
+  async findAll(isActivate?: boolean): Promise<GroupInterface[]> {
+    const groups = await this.groupRepository.find({
+      relations: ['feeds'],
+      order: { name: 'ASC' },
+      where: isActivate !== undefined ? { isActivate } : {},
+    });
 
     await Promise.all(
       groups.map(async (group) => {
