@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
     networks:
       - proxy
-      - reader-back
+      - reader
       - postgresql
     env_file:
       - .env
@@ -33,7 +33,7 @@ services:
 networks:
   proxy:
     external: true
-  reader-back:
+  reader:
     external: true
   postgresql:
     external: true
