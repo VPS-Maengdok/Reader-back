@@ -19,8 +19,11 @@ export class FeedService {
     private readonly articleService: ArticleService,
   ) {}
 
-  async findAll(): Promise<FeedInterface[]> {
-    const feeds = await this.feedRepository.find();
+  async findAll(isActivate?: boolean): Promise<FeedInterface[]> {
+    const feeds = await this.feedRepository.find({
+      order: { websiteName: 'ASC' },
+      where: isActivate !== undefined ? { isActivate } : {},
+    });
 
     await Promise.all(
       feeds.map(async (feed) => {

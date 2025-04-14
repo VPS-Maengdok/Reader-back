@@ -49,6 +49,22 @@ describe('GroupController', () => {
     });
   });
 
+  describe('GET /group?isActivate=true', () => {
+    it('should return all groups', async () => {
+      const result = await groupController.getGroups('true');
+      expect(result).toEqual(mockGroups);
+      expect(mockGroupService.findAll).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('GET /group?isActivate=false', () => {
+    it('should return an empty array of groups', async () => {
+      const result = await groupController.getGroups('false');
+      expect(result).toEqual([]);
+      expect(mockGroupService.findAll).toHaveBeenCalledWith(false);
+    });
+  });
+
   describe('GET /group/:id', () => {
     it('should return a group if found', async () => {
       const result = await groupController.getFeed(1);

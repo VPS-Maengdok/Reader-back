@@ -261,6 +261,7 @@ describe('ArticleService', () => {
   describe('findArticlesFromFilters', () => {
     let fakeQueryBuilder: Partial<{
       leftJoinAndSelect: () => any;
+      where: () => any;
       andWhere: () => any;
       orderBy: () => any;
       getMany: () => Promise<any>;
@@ -269,6 +270,7 @@ describe('ArticleService', () => {
     beforeEach(() => {
       fakeQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(mockArticles),
@@ -294,6 +296,9 @@ describe('ArticleService', () => {
       expect(fakeQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
         'feed.groups',
         'group',
+      );
+      expect(fakeQueryBuilder.where).toHaveBeenCalledWith(
+        'feed.isActivate IS TRUE',
       );
       expect(fakeQueryBuilder.orderBy).toHaveBeenCalledWith(
         'article.publishedAt',
