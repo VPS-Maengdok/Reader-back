@@ -7,8 +7,6 @@ services:
     build: 
       context: .
       dockerfile: docker/prod.Dockerfile
-    ports:
-      - "3999:${PORT:-3999}"
     environment:
       - NODE_ENV=production
       - ADMIN_USERNAME=${ADMIN_USERNAME}
@@ -29,6 +27,11 @@ services:
       - "traefik.http.routers.reader-back.entrypoints=websecure"
       - "traefik.http.routers.reader-back.tls.certresolver=myresolver"
       - "traefik.http.services.reader-back.loadbalancer.server.port=3999"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 networks:
   proxy:
