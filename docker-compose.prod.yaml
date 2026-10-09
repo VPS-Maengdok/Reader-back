@@ -1,32 +1,40 @@
-version: "3.8"
-
 services:
   reader-back:
-    image: reader-back
+    image: maengdok/reader_back:1.0.0
     container_name: reader-back
-    build: 
+    restart: unless-stopped
+    build:
       context: .
       dockerfile: docker/prod.Dockerfile
-    environment:
-      - NODE_ENV=production
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    restart: unless-stopped
-    networks:
-      - proxy
-      - reader
-      - postgresql
+    # Runtime secrets (DATABASE_*, JWT_SECRET, ADMIN_*, ALLOW_ORIGINS) come from .env.
+    # ADMIN_PASSWORD and JWT_SECRET must be at least 16 characters or the app refuses to start.
     env_file:
       - .env
-    volumes:
-      - ./init.sql:/init.sql
+    environment:
+      - NODE_ENV=production
+      - PORT=3999
+    # No published port: Traefik reaches the container on the proxy network.
+    # postgresql: the app stores its data in the shared Postgres.
+    networks:
+      - proxy
+      - postgresql
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.routers.reader-back.rule=Host(`reader.back.maengdok.fr`)"
       - "traefik.http.routers.reader-back.entrypoints=websecure"
-      - "traefik.http.routers.reader-back.tls.certresolver=myresolver"
       - "traefik.http.services.reader-back.loadbalancer.server.port=3999"
+    # TLS certificate and secure-headers come from the websecure entrypoint (P0.3)
+    mem_limit: 512m
+    pids_limit: 200
+    user: node
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     logging:
       driver: "json-file"
       options:
@@ -35,8 +43,8 @@ services:
 
 networks:
   proxy:
-    external: true
-  reader:
+    name: proxy
     external: true
   postgresql:
+    name: postgresql
     external: true
