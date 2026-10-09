@@ -107,4 +107,9 @@ describe('RssExtractor parsing snapshots', () => {
     }
     expect(outcome).toMatchSnapshot();
   });
+
+  it('refuses a deeply nested document', async () => {
+    const nested = `<rss><channel>${'<a>'.repeat(60)}x${'</a>'.repeat(60)}</channel></rss>`;
+    await expect(parse(nested)).rejects.toThrow(/nested/i);
+  });
 });

@@ -64,14 +64,8 @@ exports[`RssExtractor parsing snapshots records the behaviour on an entity expan
 `;
 
 exports[`RssExtractor parsing snapshots records the behaviour on an oversized body (12 MB) 1`] = `
-[
-  {
-    "descriptionLength": 2,
-    "title": "Small",
-  },
-  {
-    "descriptionLength": 12582912,
-    "title": "Big",
-  },
-]
+{
+  "message": "Failed to fetch RSS feed for Fixture Feed: Feed body exceeds 5242880 bytes",
+  "threw": "InternalServerErrorException",
+}
 `;

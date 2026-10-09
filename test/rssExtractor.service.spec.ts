@@ -72,7 +72,15 @@ describe('RssExtractor', () => {
 
       expect(articles).toMatchObject(expectedArticles);
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(axios.get).toHaveBeenCalledWith(mockFeed.rssUrl);
+      expect(axios.get).toHaveBeenCalledWith(
+        mockFeed.rssUrl,
+        expect.objectContaining({
+          timeout: 15_000,
+          maxContentLength: 5 * 1024 * 1024,
+          maxBodyLength: 5 * 1024 * 1024,
+          maxRedirects: 3,
+        }),
+      );
     });
 
     it('should throw InternalServerErrorException on fetch failure', async () => {
@@ -93,7 +101,15 @@ describe('RssExtractor', () => {
 
       expect(articles).toEqual([]);
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(axios.get).toHaveBeenCalledWith(mockFeed.rssUrl);
+      expect(axios.get).toHaveBeenCalledWith(
+        mockFeed.rssUrl,
+        expect.objectContaining({
+          timeout: 15_000,
+          maxContentLength: 5 * 1024 * 1024,
+          maxBodyLength: 5 * 1024 * 1024,
+          maxRedirects: 3,
+        }),
+      );
     });
   });
 
