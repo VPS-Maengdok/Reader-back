@@ -24,6 +24,15 @@ describe('assertSecureConfig', () => {
     ).toThrow(/ADMIN_PASSWORD/);
   });
 
+  it('refuses secrets made of whitespace only', () => {
+    expect(() =>
+      assertSecureConfig({
+        ADMIN_PASSWORD: ' '.repeat(MIN_SECRET_LENGTH),
+        JWT_SECRET: strong,
+      }),
+    ).toThrow(/ADMIN_PASSWORD/);
+  });
+
   it('refuses 15-character secrets', () => {
     const short = 'x'.repeat(MIN_SECRET_LENGTH - 1);
     expect(() =>

@@ -10,7 +10,7 @@ export function assertSecureConfig(
   env: Record<string, string | undefined> = process.env,
 ): void {
   const weak = REQUIRED_SECRETS.filter(
-    (name) => (env[name] ?? '').length < MIN_SECRET_LENGTH,
+    (name) => (env[name] ?? '').trim().length < MIN_SECRET_LENGTH,
   );
 
   if (weak.length > 0) {

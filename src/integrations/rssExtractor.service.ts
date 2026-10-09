@@ -33,8 +33,9 @@ export class RssExtractor {
     const options: X2jOptions = {
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
-      // Bound entity handling (DOCTYPE entities are never expanded by v5 and
-      // the standard entities such as &amp; are decoded within these limits).
+      // Bound entity handling: DOCTYPE entities are expanded one level only
+      // (nested references stay literal), and standard entities such as &amp;
+      // are decoded, all within the limits below.
       processEntities: {
         enabled: true,
         maxEntitySize: 1_000,
