@@ -10,6 +10,12 @@ import { Article } from 'src/interfaces/article.interface';
 import { RssItem, RssResponse } from 'src/interfaces/tasks/rss.interface';
 import { ArticleService } from 'src/services/article.service';
 
+// Limits applied to every feed: feed URLs point to third-party servers, so both
+// the HTTP response and the XML parser must be bounded.
+const FETCH_TIMEOUT_MS = 15_000;
+const MAX_FEED_BYTES = 5 * 1024 * 1024;
+const MAX_REDIRECTS = 3;
+
 interface RssMapping {
   titleKey: string;
   linkKey: string;
@@ -27,16 +33,42 @@ export class RssExtractor {
     const options: X2jOptions = {
       ignoreAttributes: false,
       attributeNamePrefix: '@_',
+      // Bound entity handling: DOCTYPE entities are expanded one level only
+      // (nested references stay literal), and standard entities such as &amp;
+      // are decoded, all within the limits below.
+      processEntities: {
+        enabled: true,
+        maxEntitySize: 1_000,
+        maxExpansionDepth: 5,
+        maxTotalExpansions: 1_000,
+        maxExpandedLength: 1_000_000,
+        maxEntityCount: 20,
+      },
+      // Real feeds nest fewer than 10 levels; refuse deeply nested documents.
+      maxNestedTags: 20,
     };
     this.parserInstance = new XMLParser(options);
   }
 
   async fetch(feed: Feed): Promise<Article[]> {
     try {
-      const response = await axios.get(feed.rssUrl);
-      const parsedData = this.parserInstance.parse(
-        response.data as string,
-      ) as RssResponse;
+      const response = await axios.get<string>(feed.rssUrl, {
+        timeout: FETCH_TIMEOUT_MS,
+        maxContentLength: MAX_FEED_BYTES,
+        maxBodyLength: MAX_FEED_BYTES,
+        maxRedirects: MAX_REDIRECTS,
+        responseType: 'text',
+        // Keep the raw text: no automatic JSON parsing of the body.
+        transformResponse: [(data: unknown) => data],
+      });
+      const body: unknown = response.data;
+      if (typeof body !== 'string') {
+        throw new Error('Unexpected response body type');
+      }
+      if (Buffer.byteLength(body, 'utf8') > MAX_FEED_BYTES) {
+        throw new Error(`Feed body exceeds ${MAX_FEED_BYTES} bytes`);
+      }
+      const parsedData = this.parserInstance.parse(body) as RssResponse;
       const items = this.extractItems(parsedData);
 
       if (!items.length) {

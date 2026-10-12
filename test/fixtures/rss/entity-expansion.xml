@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rss [
+  <!ENTITY lol "lol">
+  <!ENTITY lol1 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;">
+  <!ENTITY lol2 "&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;&lol1;">
+  <!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;">
+  <!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">
+]>
+<rss version="2.0">
+  <channel>
+    <title>Expansion feed</title>
+    <item>
+      <title>&lol4;</title>
+      <link>https://example.com/expansion</link>
+      <pubDate>Sun, 23 Feb 2025 10:00:00 GMT</pubDate>
+      <description>&lol2;</description>
+    </item>
+    <item>
+      <title>&lol4;</title>
+      <link>https://example.com/expansion-2</link>
+      <pubDate>Sun, 23 Feb 2025 10:00:00 GMT</pubDate>
+      <description>&lol2;</description>
+    </item>
+  </channel>
+</rss>

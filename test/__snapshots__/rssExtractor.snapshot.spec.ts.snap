@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RssExtractor parsing snapshots parses CDATA sections and HTML entities 1`] = `
+[
+  {
+    "author": "Caf&#233; & Co",
+    "content": "<div>Rich &amp; <em>content</em></div>",
+    "description": "<p>Hello <b>world</b></p>",
+    "publishedAt": 2025-02-21T10:00:00.000Z,
+    "title": "Tom & Jerry <live>",
+    "url": "https://example.com/cdata?a=1&b=2",
+  },
+  {
+    "author": "Anon",
+    "content": "Plain",
+    "description": "<p>Escaped HTML</p> &nbsp; &#x2603;",
+    "publishedAt": 2025-02-22T10:00:00.000Z,
+    "title": "Entities <b>bold</b> "quoted" 'single' &copy;",
+    "url": "https://example.com/entities",
+  },
+]
+`;
+
+exports[`RssExtractor parsing snapshots parses an RSS 2.0 feed 1`] = `
+[
+  {
+    "author": "Jane Doe",
+    "content": "Full body of the first post.",
+    "description": "Short summary of the first post.",
+    "publishedAt": 2025-02-19T12:00:00.000Z,
+    "title": "First post",
+    "url": "https://example.com/first",
+  },
+  {
+    "author": "John Roe",
+    "content": "Full body of the second post.",
+    "description": "Short summary of the second post.",
+    "publishedAt": 2025-02-20T08:30:00.000Z,
+    "title": "Second post",
+    "url": "https://example.com/second",
+  },
+]
+`;
+
+exports[`RssExtractor parsing snapshots records the behaviour on a malformed feed 1`] = `[]`;
+
+exports[`RssExtractor parsing snapshots records the behaviour on an Atom feed 1`] = `[]`;
+
+exports[`RssExtractor parsing snapshots records the behaviour on an entity expansion ("billion laughs") sample 1`] = `
+[
+  {
+    "descriptionLength": 6,
+    "descriptionStart": "&lol2;",
+    "titleLength": 6,
+    "titleStart": "&lol4;",
+  },
+  {
+    "descriptionLength": 6,
+    "descriptionStart": "&lol2;",
+    "titleLength": 6,
+    "titleStart": "&lol4;",
+  },
+]
+`;
+
+exports[`RssExtractor parsing snapshots records the behaviour on an oversized body (12 MB) 1`] = `
+{
+  "message": "Failed to fetch RSS feed for Fixture Feed: Feed body exceeds 5242880 bytes",
+  "threw": "InternalServerErrorException",
+}
+`;

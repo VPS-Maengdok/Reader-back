@@ -5,9 +5,18 @@ import { DataSource } from 'typeorm';
 import { Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { assertSecureConfig } from './config/startup-guard';
 
 async function bootstrap() {
   const logger = new Logger(bootstrap.name);
+
+  // Fail fast, before opening the database or the HTTP port.
+  try {
+    assertSecureConfig();
+  } catch (error) {
+    logger.error((error as Error).message);
+    process.exit(1);
+  }
 
   const app = await NestFactory.create(AppModule, {
     logger: new ConsoleLogger({
@@ -51,7 +60,7 @@ async function bootstrap() {
       );
       sql = sql.replace(
         /\${ADMIN_PASSWORD}/g,
-        process.env.ADMIN_PASSWORD || 'password',
+        process.env.ADMIN_PASSWORD as string,
       );
 
       await dataSource.query(sql);

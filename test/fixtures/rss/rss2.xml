@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Example Blog</title>
+    <link>https://example.com</link>
+    <description>Fixture feed</description>
+    <item>
+      <title>First post</title>
+      <link>https://example.com/first</link>
+      <pubDate>Wed, 19 Feb 2025 12:00:00 GMT</pubDate>
+      <description>Short summary of the first post.</description>
+      <dc:creator>Jane Doe</dc:creator>
+      <content:encoded>Full body of the first post.</content:encoded>
+    </item>
+    <item>
+      <title>Second post</title>
+      <link>https://example.com/second</link>
+      <pubDate>Thu, 20 Feb 2025 08:30:00 GMT</pubDate>
+      <description>Short summary of the second post.</description>
+      <dc:creator>John Roe</dc:creator>
+      <content:encoded>Full body of the second post.</content:encoded>
+    </item>
+  </channel>
+</rss>
