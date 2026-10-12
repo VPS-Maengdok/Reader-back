@@ -1,3 +1,8 @@
+# Fixed project name: without it Compose uses the folder name, and ~/portfolio/back
+# and ~/reader/back would both be project "back" (orphan warnings, and
+# --remove-orphans would delete the other stack's container).
+name: reader-back
+
 services:
   reader-back:
     image: maengdok/reader_back:1.0.0
