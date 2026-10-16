@@ -3,8 +3,12 @@
 #
 # Kept versions:
 #   - the KEEP most recent tagged versions (by created_at);
-#   - the tags of the last KEEP_DEPLOYS successful runs of deploy.yml on main
-#     (current deploy + rollback target);
+#   - the tags of every deploy.yml run on main that is not completed yet, plus
+#     the last KEEP_DEPLOYS distinct tags among completed runs that ended in
+#     success or failure (current deploy + rollback target). A "failure" run
+#     can still have deployed: the SSH step passed, the public checks failed;
+#   - untagged versions created less than 1 hour ago (a release may be
+#     pushing right now);
 #   - the version tagged "latest" and the version just pushed (sha-<GITHUB_SHA>);
 #   - every child manifest of a kept version. A multi-platform image is an OCI
 #     index: its platform image and provenance attestation show up in GHCR as
@@ -47,7 +51,7 @@ if [ -n "$FIXTURE_DIR" ]; then
 else
   raw="$(gh api --paginate "/orgs/${ORG}/packages/container/${PACKAGE}/versions?per_page=100" | jq -s 'add // []')"
 fi
-jq '[.[] | {id, digest: .name, created: .created_at, tags: (.metadata.container.tags // [])}]' \
+jq '[.[] | {id, digest: .name, created: .created_at, epoch: (.created_at | fromdateiso8601), tags: (.metadata.container.tags // [])}]' \
   <<< "$raw" > "$work/versions.json"
 
 total="$(jq 'length' "$work/versions.json")"
@@ -70,26 +74,43 @@ jq -r --argjson n "$KEEP" \
   '[.[] | select(.tags | length > 0)] | sort_by(.created) | reverse | .[:$n][] | .digest' \
   "$work/versions.json" | while read -r d; do keep "$d" "newest ${KEEP} tagged"; done
 
-# 4. The tags of the last successful deploys on main (display_title = "deploy sha-xxxxxxx").
+# 4. The tags of recent deploys on main (display_title = "deploy sha-xxxxxxx").
 if [ -n "$FIXTURE_DIR" ]; then
   runs="$(cat "$FIXTURE_DIR/runs.json")"
 else
-  runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy.yml/runs?status=success&branch=main&per_page=20")"
+  runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/deploy.yml/runs?branch=main&per_page=30")"
 fi
-deploy_tags="$(jq -r '.workflow_runs[].display_title' <<< "$runs" \
-  | sed -n 's/^deploy //p' | grep -E '^sha-[0-9a-f]{7,40}$' | awk '!seen[$0]++' | head -n "$KEEP_DEPLOYS" || true)"
-for t in $deploy_tags; do
-  d="$(jq -r --arg t "$t" '[.[] | select(.tags | index($t))][0].digest // empty' "$work/versions.json")"
+# A jq failure (unexpected response) aborts here; an empty list is fine.
+pending_titles="$(jq -r '.workflow_runs
+  | if type == "array" then .[] | select(.status != "completed") | .display_title
+    else error("unexpected runs response") end' <<< "$runs")"
+done_titles="$(jq -r '.workflow_runs
+  | if type == "array" then .[] | select(.status == "completed" and (.conclusion == "success" or .conclusion == "failure")) | .display_title
+    else error("unexpected runs response") end' <<< "$runs")"
+valid_tags() { { sed -n 's/^deploy //p' | grep -E '^sha-[0-9a-f]{7,40}$' || true; } | awk '!seen[$0]++'; }
+pending_tags="$(valid_tags <<< "$pending_titles")"
+done_tags="$(valid_tags <<< "$done_titles" | head -n "$KEEP_DEPLOYS")"
+keep_tag() {
+  local d
+  d="$(jq -r --arg t "$1" '[.[] | select(.tags | index($t))][0].digest // empty' "$work/versions.json")"
   if [ -n "$d" ]; then
-    keep "$d" "recent deploy (${t})"
+    keep "$d" "$2 ($1)"
   else
-    echo "Note: deployed tag ${t} no longer exists in the package."
+    echo "Note: deployed tag $1 no longer exists in the package."
   fi
-done
+}
+for t in $pending_tags; do keep_tag "$t" "deploy in progress"; done
+for t in $done_tags; do keep_tag "$t" "recent deploy"; done
 
 # 5. The "latest" version.
 latest_digest="$(jq -r '[.[] | select(.tags | index("latest"))][0].digest // empty' "$work/versions.json")"
 [ -n "$latest_digest" ] && keep "$latest_digest" "tagged latest"
+
+# 5b. Recent untagged versions (race with a release that is pushing).
+cutoff=$(($(date +%s) - 3600))
+for d in $(jq -r --argjson c "$cutoff" '.[] | select((.tags | length) == 0 and .epoch > $c) | .digest' "$work/versions.json"); do
+  keep "$d" "recent untagged (<1h)"
+done
 
 # 6. Children of every kept index.
 roots="$(cut -f1 "$keep_file" | sort -u)"
@@ -100,8 +121,10 @@ for d in $roots; do
   else
     manifest="$(docker buildx imagetools inspect --raw "${IMAGE}@${d}")"
   fi
-  if jq -e '(.mediaType // "") | test("index|manifest.list")' <<< "$manifest" > /dev/null; then
-    for c in $(jq -r '.manifests[].digest' <<< "$manifest"); do
+  kind="$(jq -r 'if has("manifests") then "index" else "image" end' <<< "$manifest")"
+  if [ "$kind" = index ]; then
+    children="$(jq -r '.manifests[].digest' <<< "$manifest")"
+    for c in $children; do
       keep "$c" "child of $(short "$d")"
     done
   fi
