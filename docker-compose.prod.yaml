@@ -5,12 +5,11 @@ name: reader-back
 
 services:
   reader-back:
-    image: maengdok/reader_back:1.0.0
+    # Built and pushed by the release workflow, never built on the server.
+    # IMAGE_TAG is the sha-<commit> tag being deployed; "latest" is never deployed.
+    image: ghcr.io/vps-maengdok/reader-back:${IMAGE_TAG:?set IMAGE_TAG to the image tag to deploy}
     container_name: reader-back
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: docker/prod.Dockerfile
     # Runtime secrets (DATABASE_*, JWT_SECRET, ADMIN_*, ALLOW_ORIGINS) come from .env.
     # ADMIN_PASSWORD and JWT_SECRET must be at least 16 characters or the app refuses to start.
     env_file:

@@ -1,0 +1,119 @@
+name: deploy
+run-name: deploy ${{ inputs.tag }}
+
+# Manual deploy of an image already pushed by release.yml.
+# Needs an approval on the "production" environment. Rollback = run this
+# workflow again with the previous sha- tag.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Image tag to deploy: sha-<commit> (printed by the release run)'
+        required: true
+        type: string
+
+permissions: {}
+
+# One deploy at a time for this repository; a running deploy is never cancelled.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/vps-maengdok/reader-back
+
+jobs:
+  deploy:
+    name: deploy to production
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions: {}
+    environment:
+      name: production
+      url: https://reader.back.maengdok.fr/
+    steps:
+      - name: Validate the tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [[ ! "$TAG" =~ ^sha-[0-9a-f]{7,40}$ ]]; then
+            echo "::error::Invalid tag. Expected sha-<7 to 40 lowercase hex characters>."
+            exit 1
+          fi
+
+      # Anonymous lookup, like the server's pull: fails if the tag does not exist
+      # or the package is not public.
+      - name: Check the image exists on GHCR
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! docker manifest inspect "$IMAGE:$TAG" > /dev/null; then
+            echo "::error::$IMAGE:$TAG not found (or the package is not public)."
+            exit 1
+          fi
+
+      - name: Write the SSH key and known_hosts
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ] || [ -z "$DEPLOY_KNOWN_HOSTS" ]; then
+            echo "::error::DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS must be set on the production environment."
+            exit 1
+          fi
+          SSH_DIR="$RUNNER_TEMP/deploy-ssh"
+          umask 077
+          mkdir -p "$SSH_DIR"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$SSH_DIR/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$SSH_DIR/known_hosts"
+          chmod 600 "$SSH_DIR/key" "$SSH_DIR/known_hosts"
+
+      # The key is restricted on the server to a forced command: the only thing
+      # sent is the tag. The server pulls the image, recreates the container and
+      # waits until it is healthy; exit code 0 = deployed and healthy.
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [ -z "$DEPLOY_HOST" ]; then
+            echo "::error::DEPLOY_HOST must be set on the production environment."
+            exit 1
+          fi
+          SSH_DIR="$RUNNER_TEMP/deploy-ssh"
+          ssh -F /dev/null -T \
+            -i "$SSH_DIR/key" -o IdentitiesOnly=yes -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$SSH_DIR/known_hosts" \
+            -o GlobalKnownHostsFile=/dev/null \
+            -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
+            "deploy@$DEPLOY_HOST" "$TAG"
+
+      - name: Remove the SSH key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/deploy-ssh"
+
+      - name: Public checks
+        run: |
+          # check <url> <expected HTTP code>: retries for about 60 seconds
+          check() {
+            local code i
+            for i in $(seq 1 12); do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$1" || true)
+              if [ "$code" = "$2" ]; then
+                echo "OK $1 -> $code"
+                return 0
+              fi
+              echo "try $i: $1 -> $code (expected $2)"
+              sleep 5
+            done
+            echo "::error::$1 did not answer $2. Roll back: run this workflow with the previous sha- tag."
+            return 1
+          }
+          check https://reader.back.maengdok.fr/ 200
+
+      - name: Summary
+        if: success()
+        env:
+          TAG: ${{ inputs.tag }}
+        run: echo "Deployed \`$IMAGE:$TAG\`. Rollback = run this workflow with the previous sha- tag." >> "$GITHUB_STEP_SUMMARY"
