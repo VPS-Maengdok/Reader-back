@@ -108,7 +108,8 @@ latest_digest="$(jq -r '[.[] | select(.tags | index("latest"))][0].digest // emp
 
 # 5b. Recent untagged versions (race with a release that is pushing).
 cutoff=$(($(date +%s) - 3600))
-for d in $(jq -r --argjson c "$cutoff" '.[] | select((.tags | length) == 0 and .epoch > $c) | .digest' "$work/versions.json"); do
+recent_untagged="$(jq -r --argjson c "$cutoff" '.[] | select((.tags | length) == 0 and .epoch > $c) | .digest' "$work/versions.json")"
+for d in $recent_untagged; do
   keep "$d" "recent untagged (<1h)"
 done
 
