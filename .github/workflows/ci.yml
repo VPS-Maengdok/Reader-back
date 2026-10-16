@@ -126,3 +126,18 @@ jobs:
           docker run --rm -v "$PWD:/repo" -w /repo \
             -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
             "$GITLEAKS_IMAGE" git --redact --no-banner --verbose --log-opts="$range" /repo
+
+  scripts:
+    name: GHCR cleanup script tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Offline tests of the version selection (fixtures, nothing is deleted).
+      - name: Test ghcr-cleanup.sh
+        run: ./.github/scripts/ghcr-cleanup.test.sh
