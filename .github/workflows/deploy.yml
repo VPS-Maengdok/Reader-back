@@ -103,19 +103,46 @@ jobs:
 
       - name: Public checks
         run: |
-          # check <url> <expected HTTP code>: retries for about 60 seconds
+          # check <url> <expected HTTP code>: retries for about 60 seconds.
+          # The server-side deploy result is the "Deploy" step above (exit 0 = deployed and healthy).
           check() {
-            local code i
-            for i in $(seq 1 12); do
-              code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$1" || true)
-              if [ "$code" = "$2" ]; then
-                echo "OK $1 -> $code"
+            local url=$1 expected=$2 host tries=${CHECK_TRIES:-15} delay=4
+            local v4 v6 i code ip time out err hdr msg
+            host=${url#*://}
+            host=${host%%[/:]*}
+            hdr=$(mktemp)
+            err=$(mktemp)
+
+            # Resolve the host first: the runner has no IPv6, so an AAAA-only host is unreachable
+            v4=$(getent ahostsv4 "$host" | awk '{print $1}' | sort -u | paste -sd' ' - || true)
+            v6=$(getent ahostsv6 "$host" | awk '{print $1}' | grep -vi '^::ffff:' | sort -u | paste -sd' ' - || true)
+            echo "DNS $host: IPv4 = ${v4:-none}; IPv6 = ${v6:-none}"
+            if [ -z "$v4" ]; then
+              echo "::error::$host has no IPv4 address (DNS A record). GitHub runners have no IPv6, and IPv4-only visitors cannot reach it. Add the A record; the deploy itself may have succeeded on the server."
+              echo "Server-side deploy result: see the \"Deploy\" step above (exit 0 = deployed and healthy)."
+              return 1
+            fi
+
+            for i in $(seq 1 "$tries"); do
+              : > "$hdr"
+              out=$(curl -4 -sS -o /dev/null -D "$hdr" --max-time 10 --connect-timeout 5 \
+                -w '%{http_code}|%{remote_ip}|%{time_total}' "$url" 2> "$err" || true)
+              IFS='|' read -r code ip time <<< "$out"
+              msg=$(tr '\n' ' ' < "$err")
+              code=${code:-000}
+              if [ "$code" = "$expected" ]; then
+                echo "OK $url -> $code (ip ${ip:-none}, ${time:-0}s)"
                 return 0
               fi
-              echo "try $i: $1 -> $code (expected $2)"
-              sleep 5
+              echo "try $i/$tries: $url -> $code (expected $expected), ip ${ip:-none}, ${time:-0}s${msg:+, curl: $msg}"
+              [ "$i" -lt "$tries" ] && sleep "$delay"
             done
-            echo "::error::$1 did not answer $2. Roll back: run this workflow with the previous sha- tag."
+
+            echo "::error::$url did not answer $expected after $tries tries. Roll back: run this workflow with the previous sha- tag."
+            echo "Server-side deploy result: see the \"Deploy\" step above (exit 0 = deployed and healthy). A failed check alone does not mean a failed deploy."
+            echo "Last response (Set-Cookie removed):"
+            if [ -s "$hdr" ]; then grep -vi '^set-cookie:' "$hdr" || true; else echo "(no response received)"; fi
+            echo "Hints: 000 = no TCP/TLS connection (DNS, firewall, Traefik down); 3xx = redirect, see Location; 429 = Traefik rate-limit; 404 = router/host rule; 502/504 = Traefik cannot reach the container."
             return 1
           }
           check https://reader.back.maengdok.fr/ 200
