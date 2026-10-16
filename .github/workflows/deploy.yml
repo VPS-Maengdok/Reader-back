@@ -28,7 +28,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions: {}
+    permissions:
+      packages: read
     environment:
       name: production
       url: https://reader.back.maengdok.fr/
@@ -42,14 +43,21 @@ jobs:
             exit 1
           fi
 
-      # Anonymous lookup, like the server's pull: fails if the tag does not exist
-      # or the package is not public.
+      # The package is private: log in with the workflow token (read access).
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Authenticated lookup: fails if the tag does not exist or the token
+      # cannot read the package.
       - name: Check the image exists on GHCR
         env:
           TAG: ${{ inputs.tag }}
         run: |
           if ! docker manifest inspect "$IMAGE:$TAG" > /dev/null; then
-            echo "::error::$IMAGE:$TAG not found (or the package is not public)."
+            echo "::error::$IMAGE:$TAG not found, or this repository has no read access to the package."
             exit 1
           fi
 
