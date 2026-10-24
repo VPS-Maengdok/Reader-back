@@ -141,3 +141,28 @@ jobs:
       # Offline tests of the version selection (fixtures, nothing is deleted).
       - name: Test ghcr-cleanup.sh
         run: ./.github/scripts/ghcr-cleanup.test.sh
+
+  ports:
+    name: published ports (prod compose)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Docker compose v2 and jq are installed on ubuntu runners.
+      - name: Test check-published-ports.sh
+        run: ./.github/scripts/check-published-ports.test.sh
+
+      # The same script must also run with bash 3.2 (macOS): docker is stubbed there.
+      - name: Test check-published-ports.sh with bash 3.2
+        run: >-
+          docker run --rm -v "$PWD:/w:ro" -w /w bash:3.2
+          sh -c 'apk add -q jq >/dev/null && bash .github/scripts/check-published-ports.bash32.test.sh'
+
+      # Only Traefik may publish 80/443; any other published port must be on loopback.
+      - name: Check docker-compose.prod.yaml
+        run: ./.github/scripts/check-published-ports.sh
